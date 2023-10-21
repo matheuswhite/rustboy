@@ -2,7 +2,12 @@
 name = "rustboy"
 version = "0.1.0"
 edition = "2021"
-authors = ["Matheus T. dos Santos <matheuswhite1@protonmail.com>", "José Gomes <>", "Paulo Roberto <>", "Victor Miranda <>"]
+authors = [
+    "Matheus T. dos Santos <matheuswhite1@protonmail.com>",
+    "José Gomes da Silva Junior <jgsj@ic.ufal.br>",
+    "Paulo Roberto Mendes dos Santos  <pauloxrms@gmail.com>",
+    "Victor Alexandre da Rocha Monteiro Miranda <victoralexandre499@gmail.com>"
+]
 
 [lib]
 name = "rustboy"
