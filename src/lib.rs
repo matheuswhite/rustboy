@@ -3,12 +3,13 @@
 
 extern crate alloc;
 
-mod audio;
-mod cartridge;
-mod cpu;
-mod graphics;
+pub mod audio;
+pub mod cartridge;
+pub mod cpu;
+pub mod graphics;
 pub mod io_regs;
 pub mod joypad;
-mod ram;
-mod serial_data;
+pub mod oam;
+pub mod ram;
+pub mod serial_data;
 pub mod virtual_memory;

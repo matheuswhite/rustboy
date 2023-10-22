@@ -7,7 +7,7 @@ pub struct IoRegs {
     joypad: Rc<JoyPad>,
 }
 
-impl MemoryMappedPeripheral<0x80> for IoRegs {
+impl MemoryMappedPeripheral for IoRegs {
     fn write(&mut self, _address: u16, _data: u8) {
         todo!()
     }

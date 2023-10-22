@@ -33,7 +33,7 @@ pub enum JoyPadButton {
     A,
 }
 
-impl MemoryMappedPeripheral<1> for JoyPad {
+impl MemoryMappedPeripheral for JoyPad {
     fn write(&mut self, _address: u16, data: u8) {
         if data & 0x20 != 0 {
             self.register |= 0x20;
