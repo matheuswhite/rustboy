@@ -20,7 +20,7 @@ pub struct Cartridge {
 }
 
 impl Cartridge {
-    pub fn load<const S: usize>(_content: [u8; S]) -> Self {
+    pub fn load(_content: &[u8]) -> Self {
         todo!()
     }
 

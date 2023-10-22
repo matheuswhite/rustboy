@@ -92,20 +92,9 @@ impl MemoryMappedPeripheral for VirtualMemory {
 mod tests {
     use super::*;
 
-    #[derive(Default)]
-    pub struct Dummy;
-
-    impl MemoryMappedPeripheral for Dummy {
-        fn write(&mut self, _address: u16, _data: u8) {}
-
-        fn read(&self, _address: u16) -> u8 {
-            0xff
-        }
-    }
-
     #[test]
     fn new_virtual_memory() {
-        let cartridge = Cartridge::load([]);
+        let cartridge = Cartridge::load(&[]);
         let mut vm = VirtualMemory::new(cartridge);
 
         vm.write(0, 0xff);
