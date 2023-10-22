@@ -27,14 +27,29 @@ where
 
 impl<ROM16, RAM8, RAM4, RAM128, OAM, IO> VirtualMemory<ROM16, RAM8, RAM4, RAM128, OAM, IO>
 where
-    ROM16: MemoryMappedPeripheral<0x4_000> + Default,
-    RAM8: MemoryMappedPeripheral<0x2_000> + Default,
-    RAM4: MemoryMappedPeripheral<0x1_000> + Default,
+    ROM16: MemoryMappedPeripheral<0x4000> + Default,
+    RAM8: MemoryMappedPeripheral<0x2000> + Default,
+    RAM4: MemoryMappedPeripheral<0x1000> + Default,
     RAM128: MemoryMappedPeripheral<0x7F> + Default,
     OAM: MemoryMappedPeripheral<0xA0> + Default,
     IO: MemoryMappedPeripheral<0x80> + Default,
 {
-    pub fn write(&mut self, address: u16, data: u8) {
+    pub fn io_regs_ref(&self) -> &IO {
+        &self.io_regs
+    }
+}
+
+impl<ROM16, RAM8, RAM4, RAM128, OAM, IO> MemoryMappedPeripheral<0x10_000>
+    for VirtualMemory<ROM16, RAM8, RAM4, RAM128, OAM, IO>
+where
+    ROM16: MemoryMappedPeripheral<0x4000> + Default,
+    RAM8: MemoryMappedPeripheral<0x2000> + Default,
+    RAM4: MemoryMappedPeripheral<0x1000> + Default,
+    RAM128: MemoryMappedPeripheral<0x7F> + Default,
+    OAM: MemoryMappedPeripheral<0xA0> + Default,
+    IO: MemoryMappedPeripheral<0x80> + Default,
+{
+    fn write(&mut self, address: u16, data: u8) {
         match address {
             0x0000..=0x3fff => self.rom_bank0.write(address, data),
             0x4000..=0x7fff => self.rom_bank1.write(address - 0x4000, data),
@@ -51,7 +66,7 @@ where
         }
     }
 
-    pub fn read(&self, address: u16) -> u8 {
+    fn read(&self, address: u16) -> u8 {
         match address {
             0x0000..=0x3fff => self.rom_bank0.read(address),
             0x4000..=0x7fff => self.rom_bank1.read(address - 0x4000),

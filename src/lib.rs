@@ -1,19 +1,14 @@
 #![no_std]
 #![deny(warnings)]
 
+extern crate alloc;
+
+mod audio;
+mod cartridge;
+mod cpu;
+mod graphics;
+pub mod io_regs;
+pub mod joypad;
+mod ram;
+mod serial_data;
 pub mod virtual_memory;
-
-pub fn add(left: usize, right: usize) -> usize {
-    left + right
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn it_works() {
-        let result = add(2, 2);
-        assert_eq!(result, 4);
-    }
-}

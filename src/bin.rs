@@ -1,3 +1,4 @@
+use rustboy::io_regs::IoRegs;
 use rustboy::virtual_memory::{MemoryMappedPeripheral, VirtualMemory};
 
 struct Memory<const S: usize> {
@@ -27,8 +28,10 @@ fn main() {
         Memory<0x1_000>,
         Memory<0x7F>,
         Memory<0xA0>,
-        Memory<0x80>,
+        IoRegs,
     >::default();
+
+    let joypad = virtual_memory.io_regs_ref().joypad_ref();
 
     virtual_memory.write(0, 0xaf);
     let _ = virtual_memory.read(0);
