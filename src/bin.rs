@@ -8,6 +8,8 @@ fn load_cartridge_from_file(path: &str) -> std::io::Result<Vec<u8>> {
 fn main() -> std::io::Result<()> {
     let cartridge = load_cartridge_from_file("test.gb")?;
     let cartridge = Cartridge::load(&cartridge);
+    println!("Cartridge: {}", cartridge);
+
     let mut virtual_memory = VirtualMemory::new(cartridge);
     let _joypad = virtual_memory.io_regs_ref().joypad_ref();
 

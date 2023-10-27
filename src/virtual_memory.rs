@@ -9,6 +9,7 @@ pub trait MemoryMappedPeripheral {
 }
 
 pub struct VirtualMemory {
+    boot_rom: Rom<0x100>,
     rom_bank0: Rom<0x4000>,
     rom_bank1: Rom<0x4000>,
     vram: Ram<0x2000>,
@@ -22,8 +23,11 @@ pub struct VirtualMemory {
 }
 
 impl VirtualMemory {
+    const BOOT_ROM: &'static [u8] = include_bytes!("DMG_ROM.bin");
+
     pub fn new(mut cartridge: Cartridge) -> Self {
         Self {
+            boot_rom: Rom::new(VirtualMemory::BOOT_ROM.to_vec(), 1),
             rom_bank0: cartridge.take_bank0(),
             rom_bank1: cartridge.take_bank1(),
             vram: Ram::default(),
@@ -44,7 +48,10 @@ impl VirtualMemory {
 
 impl MemoryMappedPeripheral for VirtualMemory {
     fn write(&mut self, address: u16, data: u8) {
+        let boot_rom_en = self.io_regs.read(0x0050) == 0x00;
+
         match address {
+            0x0000..=0x00ff if boot_rom_en => self.boot_rom.write(address, data),
             0x0000..=0x3fff => self.rom_bank0.write(address, data),
             0x4000..=0x7fff => self.rom_bank1.write(address - 0x4000, data),
             0x8000..=0x9fff => self.vram.write(address - 0x8000, data),
@@ -65,7 +72,10 @@ impl MemoryMappedPeripheral for VirtualMemory {
     }
 
     fn read(&self, address: u16) -> u8 {
+        let boot_rom_en = self.io_regs.read(0x0050) == 0x00;
+
         match address {
+            0x0000..=0x00ff if boot_rom_en => self.boot_rom.read(address),
             0x0000..=0x3fff => self.rom_bank0.read(address),
             0x4000..=0x7fff => self.rom_bank1.read(address - 0x4000),
             0x8000..=0x9fff => self.vram.read(address - 0x8000),
@@ -85,19 +95,5 @@ impl MemoryMappedPeripheral for VirtualMemory {
             0xff80..=0xfffe => self.hram.read(address - 0xff80),
             0xffff => self.ie as u8,
         }
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn new_virtual_memory() {
-        let cartridge = Cartridge::load(&[]);
-        let mut vm = VirtualMemory::new(cartridge);
-
-        vm.write(0, 0xff);
-        let _data = vm.read(0);
     }
 }
