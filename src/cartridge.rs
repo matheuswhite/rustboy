@@ -632,8 +632,7 @@ impl Cartridge {
 
     fn compute_header_checksum(content: &[u8]) -> u8 {
         content.iter().fold(0u8, |checksum, byte| {
-            // TODO Isso pode dar overflow e panicar o código
-            checksum - *byte - 1
+            checksum.wrapping_sub(*byte).wrapping_sub(1)
         })
     }
 
