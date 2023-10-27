@@ -112,7 +112,7 @@ pub enum NewLicensee {
 impl From<&[char]> for NewLicensee {
     fn from(value: &[char]) -> Self {
         match value {
-            ['0', '0'] => NewLicensee::None,
+            ['0', '0'] | ['\0', '\0'] => NewLicensee::None,
             ['0', '1'] => NewLicensee::NintendoRnD1,
             ['0', '8'] => NewLicensee::Capcom,
             ['1', '3'] => NewLicensee::EletronicArts,
@@ -711,7 +711,17 @@ impl Display for Cartridge {
     fn fmt(&self, f: &mut Formatter<'_>) -> core::fmt::Result {
         write!(
             f,
-            "{}, made by {}\nOld licensee code: {:?}\nNew licensee code: {:?}\nDestination: {:?}\nCartridge type: {:?}\nCGB: {}, SGB: {}\nMask ROM Version: {}\nROM: 16MiB x{}\nRAM: 8MiB x{}\nHeader Checksum: {}\nGlobal Checksum: {}",
+            "{}, made by {}\n\
+            Old licensee code: {:?}\n\
+            New licensee code: {:?}\n\
+            Destination: {:?}\n\
+            Cartridge type: {:?}\n\
+            CGB: 0x{:02x}, SGB: 0x{:02x}\n\
+            Mask ROM Version: {}\n\
+            ROM: 16MiB x{}\n\
+            RAM: 8MiB x{}\n\
+            Header Checksum: 0x{:02x}\n\
+            Global Checksum: 0x{:04x}",
             self.title,
             self.manufacture,
             self.old_licensee,

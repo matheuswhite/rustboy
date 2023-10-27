@@ -2,11 +2,11 @@ use rustboy::cartridge::Cartridge;
 use rustboy::virtual_memory::{MemoryMappedPeripheral, VirtualMemory};
 
 fn load_cartridge_from_file(path: &str) -> std::io::Result<Vec<u8>> {
-    Ok(std::fs::read_to_string(path)?.as_bytes().to_vec())
+    std::fs::read(path)
 }
 
 fn main() -> std::io::Result<()> {
-    let cartridge = load_cartridge_from_file("test.gb")?;
+    let cartridge = load_cartridge_from_file("roms/cpu_instrs.gb")?;
     let cartridge = Cartridge::load(&cartridge);
     println!("Cartridge: {}", cartridge);
 
