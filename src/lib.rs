@@ -7,7 +7,6 @@ pub mod audio;
 pub mod cartridge;
 pub mod cpu;
 pub mod graphics;
-pub mod io_regs;
 pub mod joypad;
 pub mod oam;
 pub mod ram;

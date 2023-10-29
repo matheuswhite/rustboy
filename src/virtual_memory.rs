@@ -1,7 +1,8 @@
 use crate::cartridge::{Cartridge, Rom};
-use crate::io_regs::IoRegs;
+use crate::joypad::JoyPad;
 use crate::oam::Oam;
 use crate::ram::Ram;
+use alloc::rc::Rc;
 
 pub trait MemoryMappedPeripheral {
     fn write(&mut self, address: u16, data: u8);
@@ -17,7 +18,8 @@ pub struct VirtualMemory {
     wram0: Ram<0x1000>,
     wram1: Ram<0x1000>,
     oam: Oam,
-    io_regs: IoRegs,
+    joypad: Rc<JoyPad>,
+    boot_rom_en: u8,
     hram: Ram<0x7F>,
     ie: bool,
 }
@@ -35,20 +37,35 @@ impl VirtualMemory {
             wram0: Ram::default(),
             wram1: Ram::default(),
             oam: Oam::default(),
-            io_regs: IoRegs::default(),
+            joypad: Rc::new(JoyPad::default()),
+            boot_rom_en: 0x01,
             hram: Ram::default(),
             ie: true,
         }
     }
 
-    pub fn io_regs_ref(&self) -> &IoRegs {
-        &self.io_regs
+    pub fn joypad_ref(&self) -> Rc<JoyPad> {
+        self.joypad.clone()
+    }
+
+    fn write_io_regs(&mut self, address: u16, data: u8) {
+        match address {
+            0x0050 => self.boot_rom_en = data,
+            _ => todo!(),
+        }
+    }
+
+    fn read_io_regs(&self, address: u16) -> u8 {
+        match address {
+            0x0050 => self.boot_rom_en,
+            _ => todo!(),
+        }
     }
 }
 
 impl MemoryMappedPeripheral for VirtualMemory {
     fn write(&mut self, address: u16, data: u8) {
-        let boot_rom_en = self.io_regs.read(0x0050) == 0x00;
+        let boot_rom_en = self.boot_rom_en == 0x00;
 
         match address {
             0x0000..=0x00ff if boot_rom_en => self.boot_rom.write(address, data),
@@ -65,14 +82,14 @@ impl MemoryMappedPeripheral for VirtualMemory {
             0xe000..=0xfdff => self.wram0.write(address - 0xe000, data),
             0xfe00..=0xfe9f => self.oam.write(address - 0xfe00, data),
             0xfea0..=0xfeff => panic!("Write at prohibited memory area [{address}:{data}]"),
-            0xff00..=0xff7f => self.io_regs.write(address - 0xff00, data),
+            0xff00..=0xff7f => self.write_io_regs(address - 0xff00, data),
             0xff80..=0xfffe => self.hram.write(address - 0xff80, data),
             0xffff => self.ie = data != 0,
         }
     }
 
     fn read(&self, address: u16) -> u8 {
-        let boot_rom_en = self.io_regs.read(0x0050) == 0x00;
+        let boot_rom_en = self.boot_rom_en == 0x00;
 
         match address {
             0x0000..=0x00ff if boot_rom_en => self.boot_rom.read(address),
@@ -91,7 +108,7 @@ impl MemoryMappedPeripheral for VirtualMemory {
             0xe000..=0xfdff => self.wram0.read(address - 0xe000),
             0xfe00..=0xfe9f => self.oam.read(address - 0xfe00),
             0xfea0..=0xfeff => panic!("Read at prohibited memory area [{address}]"),
-            0xff00..=0xff7f => self.io_regs.read(address - 0xff00),
+            0xff00..=0xff7f => self.read_io_regs(address - 0xff00),
             0xff80..=0xfffe => self.hram.read(address - 0xff80),
             0xffff => self.ie as u8,
         }
