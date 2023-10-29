@@ -8,7 +8,6 @@ pub mod cartridge;
 pub mod cpu;
 pub mod graphics;
 pub mod joypad;
-pub mod oam;
 pub mod ram;
 pub mod serial_data;
 pub mod virtual_memory;

@@ -1,12 +1,18 @@
 use crate::cartridge::{Cartridge, Rom};
 use crate::joypad::JoyPad;
-use crate::oam::Oam;
 use crate::ram::Ram;
-use alloc::rc::Rc;
 
 pub trait MemoryMappedPeripheral {
     fn write(&mut self, address: u16, data: u8);
     fn read(&self, address: u16) -> u8;
+}
+
+pub trait WriteBlock {
+    fn write_block(&mut self, base_address: u16, block: &[u8]);
+}
+
+pub trait ReadBlock {
+    fn read_block<const S: usize>(&self, base_address: u16) -> [u8; S];
 }
 
 pub struct VirtualMemory {
@@ -17,9 +23,10 @@ pub struct VirtualMemory {
     external_ram: Option<Ram<0x2000>>,
     wram0: Ram<0x1000>,
     wram1: Ram<0x1000>,
-    oam: Oam,
-    joypad: Rc<JoyPad>,
+    oam: Ram<0xA0>,
+    joypad: JoyPad,
     boot_rom_en: u8,
+    oam_dma: u8,
     hram: Ram<0x7F>,
     ie: bool,
 }
@@ -36,29 +43,50 @@ impl VirtualMemory {
             external_ram: cartridge.take_ram(),
             wram0: Ram::default(),
             wram1: Ram::default(),
-            oam: Oam::default(),
-            joypad: Rc::new(JoyPad::default()),
+            oam: Ram::default(),
+            joypad: JoyPad::default(),
             boot_rom_en: 0x01,
+            oam_dma: 0x00,
             hram: Ram::default(),
             ie: true,
         }
     }
 
-    pub fn joypad_ref(&self) -> Rc<JoyPad> {
-        self.joypad.clone()
+    pub fn joypad_ref(&self) -> &JoyPad {
+        &self.joypad
     }
 
     fn write_io_regs(&mut self, address: u16, data: u8) {
         match address {
+            0x0000 => self.joypad.write(address, data),
+            0x0001..=0x0002 => todo!("serial transfer write"),
+            0x0004..=0x0007 => todo!("timer and driver write"),
+            0x0010..=0x0026 => todo!("audio write"),
+            0x0030..=0x003F => todo!("wave pattern write"),
+            0x0040..=0x0045 | 0x0047..=0x004B => todo!("graphics write"),
+            0x0046 => {
+                self.oam_dma = data;
+
+                let base_address = (data as u16) << 8;
+                let source = self.read_block::<0xA0>(base_address);
+                self.oam.write_block(0x0000, &source);
+            }
             0x0050 => self.boot_rom_en = data,
-            _ => todo!(),
+            _ => panic!("IO register address cannot be written"),
         }
     }
 
     fn read_io_regs(&self, address: u16) -> u8 {
         match address {
+            0x0000 => self.joypad.read(address),
+            0x0001..=0x0002 => todo!("serial transfer read"),
+            0x0004..=0x0007 => todo!("timer and driver read"),
+            0x0010..=0x0026 => todo!("audio read"),
+            0x0030..=0x003F => todo!("wave pattern read"),
+            0x0040..=0x0045 | 0x0047..=0x004B => todo!("graphics read"),
+            0x0046 => self.oam_dma,
             0x0050 => self.boot_rom_en,
-            _ => todo!(),
+            _ => panic!("IO register address cannot be read"),
         }
     }
 }
@@ -112,5 +140,17 @@ impl MemoryMappedPeripheral for VirtualMemory {
             0xff80..=0xfffe => self.hram.read(address - 0xff80),
             0xffff => self.ie as u8,
         }
+    }
+}
+
+impl ReadBlock for VirtualMemory {
+    fn read_block<const S: usize>(&self, base_address: u16) -> [u8; S] {
+        let mut output = [0xFF; S];
+
+        for i in 0..S {
+            output[i] = self.read(base_address + i as u16);
+        }
+
+        output
     }
 }

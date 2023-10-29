@@ -11,7 +11,7 @@ fn main() -> std::io::Result<()> {
     println!("Cartridge: {}", cartridge);
 
     let mut virtual_memory = VirtualMemory::new(cartridge);
-    let _joypad = virtual_memory.io_regs_ref().joypad_ref();
+    let _joypad = virtual_memory.joypad_ref();
 
     virtual_memory.write(0, 0xaf);
     let _ = virtual_memory.read(0);

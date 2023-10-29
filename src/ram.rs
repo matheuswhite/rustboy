@@ -1,4 +1,4 @@
-use crate::virtual_memory::MemoryMappedPeripheral;
+use crate::virtual_memory::{MemoryMappedPeripheral, WriteBlock};
 use alloc::vec;
 use alloc::vec::Vec;
 
@@ -51,5 +51,19 @@ impl<const S: usize> MemoryMappedPeripheral for Ram<S> {
         }
 
         self.buffer[self.actual_bank][address as usize]
+    }
+}
+
+impl<const S: usize> WriteBlock for Ram<S> {
+    fn write_block(&mut self, base_address: u16, block: &[u8]) {
+        let base_address = base_address as usize;
+
+        for i in 0..block.len() {
+            if base_address + i >= S {
+                return;
+            }
+
+            self.buffer[self.actual_bank][base_address + i] = block[i];
+        }
     }
 }
